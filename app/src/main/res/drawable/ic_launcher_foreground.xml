@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple chat-bubble monogram, kept within the 66dp safe zone for adaptive icons -->
+    <path
+        android:fillColor="#7C9EFF"
+        android:pathData="M28,34 h52 a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-30 l-14,12 v-12 h-8 a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10 z" />
+    <path
+        android:strokeColor="#0F1115"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M38,52 h32 M38,62 h20" />
+</vector>
