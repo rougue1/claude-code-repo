@@ -94,6 +94,15 @@ fun MessageBubble(
                             )
                         } else if (message.content.isBlank() && message.isStreaming) {
                             CircularProgressIndicator(modifier = Modifier.padding(4.dp).size(16.dp), strokeWidth = 2.dp)
+                        } else if (message.isStreaming) {
+                            // Skip markdown/code-fence parsing while live — re-scanning the whole
+                            // growing string on every token is real CPU cost competing with
+                            // inference itself. Render plain text until the message settles.
+                            Text(
+                                text = message.content,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
                         } else {
                             MarkdownText(text = message.content)
                         }

@@ -30,14 +30,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.localchat.app.ui.components.ConnectionBanner
 import com.localchat.app.ui.components.ModelPickerDropdown
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +54,6 @@ fun ChatScreen(
     var draft by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.transientError) {
         val err = uiState.transientError ?: return@LaunchedEffect
@@ -72,9 +69,12 @@ fun ChatScreen(
         }
     }
     val displayMessages = uiState.displayMessages
+    // Calling scrollToItem directly (not via scope.launch) means Compose cancels the
+    // previous in-flight scroll when this effect restarts on the next token, instead of
+    // stacking a new animated-scroll coroutine on top of it every single chunk.
     LaunchedEffect(displayMessages.size, displayMessages.lastOrNull()?.content, displayMessages.lastOrNull()?.thinking) {
         if (displayMessages.isNotEmpty() && isNearBottom) {
-            scope.launch { listState.animateScrollToItem(displayMessages.size - 1) }
+            listState.scrollToItem(displayMessages.size - 1)
         }
     }
 
