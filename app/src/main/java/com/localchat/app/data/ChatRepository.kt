@@ -57,8 +57,6 @@ class ChatRepository(context: Context) {
 
     suspend fun getLastMessage(conversationId: Long): MessageEntity? = dao.getLastMessage(conversationId)
 
-    suspend fun stopStreaming(conversationId: Long) = dao.stopStreaming(conversationId)
-
     // --- Ollama network access ---
 
     suspend fun listModels(host: String): List<OllamaModelDto> = ollama.listModels(host)

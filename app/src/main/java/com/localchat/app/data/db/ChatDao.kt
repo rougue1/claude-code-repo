@@ -46,9 +46,6 @@ interface ChatDao {
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY id DESC LIMIT 1")
     suspend fun getLastMessage(conversationId: Long): MessageEntity?
 
-    @Query("UPDATE messages SET isStreaming = 0 WHERE conversationId = :conversationId AND isStreaming = 1")
-    suspend fun stopStreaming(conversationId: Long)
-
     @Delete
     suspend fun deleteMessage(message: MessageEntity)
 }

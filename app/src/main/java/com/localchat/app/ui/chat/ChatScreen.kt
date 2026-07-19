@@ -71,9 +71,10 @@ fun ChatScreen(
             lastVisible >= info.totalItemsCount - 2
         }
     }
-    LaunchedEffect(uiState.messages.size, uiState.messages.lastOrNull()?.content, uiState.messages.lastOrNull()?.thinking) {
-        if (uiState.messages.isNotEmpty() && isNearBottom) {
-            scope.launch { listState.animateScrollToItem(uiState.messages.size - 1) }
+    val displayMessages = uiState.displayMessages
+    LaunchedEffect(displayMessages.size, displayMessages.lastOrNull()?.content, displayMessages.lastOrNull()?.thinking) {
+        if (displayMessages.isNotEmpty() && isNearBottom) {
+            scope.launch { listState.animateScrollToItem(displayMessages.size - 1) }
         }
     }
 
@@ -130,16 +131,16 @@ fun ChatScreen(
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     uiState.isInitializing -> LoadingIndicator("Connecting to Ollama…")
-                    uiState.messages.isEmpty() -> EmptyState(hasModel = uiState.selectedModel != null)
+                    displayMessages.isEmpty() -> EmptyState(hasModel = uiState.selectedModel != null)
                     else -> {
-                        val lastAssistantIndex = uiState.messages.indexOfLast { it.role == "assistant" }
+                        val lastAssistantIndex = displayMessages.indexOfLast { it.role == "assistant" }
                         LazyColumn(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            itemsIndexed(uiState.messages, key = { _, m -> m.id }) { index, message ->
+                            itemsIndexed(displayMessages, key = { _, m -> m.id }) { index, message ->
                                 MessageBubble(
                                     message = message,
                                     isLastAssistantMessage = index == lastAssistantIndex,

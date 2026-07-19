@@ -16,6 +16,7 @@ data class ChatUiState(
     val conversations: List<ConversationEntity> = emptyList(),
     val currentConversationId: Long? = null,
     val messages: List<MessageEntity> = emptyList(),
+    val streamingMessage: MessageEntity? = null,
     val isGenerating: Boolean = false,
     val sidebarQuery: String = "",
     val transientError: String? = null,
@@ -26,4 +27,10 @@ data class ChatUiState(
     val filteredConversations: List<ConversationEntity>
         get() = if (sidebarQuery.isBlank()) conversations
         else conversations.filter { it.title.contains(sidebarQuery, ignoreCase = true) }
+
+    // While a response is streaming, its live content lives here (in-memory) rather than
+    // in the DB-backed `messages` list, so token-by-token updates don't touch Room at all.
+    val displayMessages: List<MessageEntity>
+        get() = if (streamingMessage == null) messages
+        else messages.map { if (it.id == streamingMessage.id) streamingMessage else it }
 }

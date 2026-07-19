@@ -219,6 +219,18 @@ class ChatViewModel(private val repository: ChatRepository) : ViewModel() {
         _uiState.update { it.copy(isGenerating = true) }
         val contentBuilder = StringBuilder()
         val thinkingBuilder = StringBuilder()
+
+        fun liveMessage(streaming: Boolean, error: Boolean = false) = MessageEntity(
+            id = placeholderId,
+            conversationId = convId,
+            role = "assistant",
+            content = contentBuilder.toString(),
+            thinking = thinkingBuilder.toString().ifBlank { null },
+            isStreaming = streaming,
+            isError = error,
+            createdAt = createdAt,
+        )
+
         try {
             repository.streamChat(
                 _uiState.value.ollamaHost,
@@ -226,38 +238,20 @@ class ChatViewModel(private val repository: ChatRepository) : ViewModel() {
             ).collect { chunk ->
                 chunk.message?.content?.let { contentBuilder.append(it) }
                 chunk.message?.thinking?.let { thinkingBuilder.append(it) }
-                repository.updateMessage(
-                    MessageEntity(
-                        id = placeholderId,
-                        conversationId = convId,
-                        role = "assistant",
-                        content = contentBuilder.toString(),
-                        thinking = thinkingBuilder.toString().ifBlank { null },
-                        isStreaming = !chunk.done,
-                        createdAt = createdAt,
-                    )
-                )
+                // Only touch in-memory state per token — writing to Room here would force its
+                // observed Flow to re-query and re-render the whole conversation on every token.
+                _uiState.update { it.copy(streamingMessage = liveMessage(streaming = !chunk.done)) }
             }
+            repository.updateMessage(liveMessage(streaming = false))
             repository.touchConversation(convId)
         } catch (e: CancellationException) {
-            withContext(NonCancellable) { repository.stopStreaming(convId) }
+            withContext(NonCancellable) { repository.updateMessage(liveMessage(streaming = false)) }
             throw e
         } catch (e: Exception) {
-            repository.updateMessage(
-                MessageEntity(
-                    id = placeholderId,
-                    conversationId = convId,
-                    role = "assistant",
-                    content = contentBuilder.toString(),
-                    thinking = thinkingBuilder.toString().ifBlank { null },
-                    isStreaming = false,
-                    isError = true,
-                    createdAt = createdAt,
-                )
-            )
+            repository.updateMessage(liveMessage(streaming = false, error = true))
             _uiState.update { it.copy(transientError = e.message ?: "Generation failed") }
         } finally {
-            _uiState.update { it.copy(isGenerating = false) }
+            _uiState.update { it.copy(isGenerating = false, streamingMessage = null) }
         }
     }
 }
